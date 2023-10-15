@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab 4</title>
+
+         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+           crossorigin=""/>
+
+         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+           crossorigin=""></script>
+
+			<style type="text/css">
+				
+				html, body { margin: 0; padding: 0; height: 100%; }
+				#map { min-height: 100%; }
+			</style>
+
+			<script type="text/javascript" src="data.js"></script>
+			
+			<script type="text/javascript" src="data2.js"></script>
+
+			<style>
+				/* Optional: adjust the values below to change the appearance of the legend */
+				.legend {
+				padding: 6px 8px;
+				line-height: 18px;
+				background: rgba(255,255,255,0.9);
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				border-radius: 5px;
+			}
+
+				/* Optional: adjust the values below to change the appearance of the legend color boxes */
+				.legend i {
+				width: 18px;
+				height: 18px;
+				float: left;
+				margin-right: 8px;
+				opacity: 0.7;
+			}
+			</style>
+
+   </head>
+
+    <body>
+        <div id="map"></div>
+
+        <script type="text/javascript">
+
+         var map = L.map('map', {
+              center: [41.8332617,-88.0616142],
+              zoom: 10
+          });
+
+			var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+			attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+             maxZoom: 11,
+             minZoom: 5
+			 
+           }).addTo(map); 
+
+           var Esri_NatGeoWorldMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+			attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+			maxZoom: 16
+			});
+
+					
+
+        var COMMUNITY = L.geoJson(data, {style:style}).addTo(map);
+
+	
+         L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+           attribution: 'Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.',
+           maxZoom: 11,
+           minZoom: 5
+         }).addTo(map);
+
+			function getColor(value) {
+		return  value > 8257.28  ? '#045a8d':
+				value > 5368.39  ? '#2b8cbe':
+				value > 3852.27  ? '#74a9cf':
+			   value > 1846.76  ? '#bdc9e1':
+								'#f1eef6';
+		}
+			function style(feature){
+			return {
+        fillColor: getColor(feature.properties.PopDen),   // PopDen is the field name for the population density data
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+		dashArray: '3',
+        fillOpacity: 0.7
+		};
+		}
+
+		var Autoperson = L.geoJson(data2, {style:style2}).addTo(map);
+
+	
+         L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+           attribution: 'Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.',
+           maxZoom: 11,
+           minZoom: 5
+         }).addTo(map);
+
+			function getColor2(value) {
+		return  value > 1.9  ? '#045a8d':
+				value > 1.2  ? '#2b8cbe':
+				value > 0.6  ? '#74a9cf':
+			   value > 0.1  ? '#bdc9e1':
+								'#f1eef6';
+		}
+			function style2(feature){
+			return {
+        fillColor: getColor2(feature.properties.Autoperson),   // Autoperson is the field name for the percentage of person that have been in a auto crimes incident 
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+		dashArray: '3',
+        fillOpacity: 0.7
+		};
+		}
+
+
+
+
+		var legend = L.control({position: 'bottomright'}); // Try the other three corners if you like.
+
+		legend.onAdd = function (map) {
+
+		var div = L.DomUtil.create('div', 'legend'),
+        grades = [ 0, 1846, 3852, 5368, 8257, 12557]; // The break values to define the intervals of population, note we begin from 0 here
+
+		div.innerHTML = '<b>Population Density <br> Chicago <br></b>'; // The legend title (HTML-based), in this case it's Population Density 2011
+
+		// Loop through our the classes and generate a label with a color box for each interval.
+		// If you are creating a choropleth map, you DO NOT need to change lines below.
+		for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+        '<i style="background:' + getColor(grades[i] + 1) + '"></i>' +
+        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+		}
+
+			return div;
+		};
+
+		legend.addTo(map);
+
+		var basemaps = {
+		"National Geographic World Map":Esri_NatGeoWorldMap,
+		"Satellite Imagery": Esri_WorldImagery
+		
+		};
+
+		var overlaymaps = {
+		"Chicago COMMUNITY": COMMUNITY,
+		"chicago auto crimes": Autoperson
+		};
+
+		
+
+		L.control.layers(basemaps, overlaymaps).addTo(map);
+
+			// Removing the legend when the layer is removed
+		map.on('overlayremove', function(eventLayer){
+		if (eventLayer.name == 'Chicago COMMUNITY'){ // We use the key/display name to refer to the layer
+		map.removeControl(legend); // legend is the variable name of the layer legend
+		}
+		});
+
+		// Adding the legend when the layer is added
+		map.on('overlayadd', function(eventLayer){
+		if (eventLayer.name == 'Chicago COMMUNITY'){
+		legend.addTo(map);
+		}
+		});
+
+		legend.addTo(map);
+		
+		// Removing the legend when the layer is removed
+		map.on('overlayremove', function(eventLayer){
+		if (eventLayer.name == 'chicago auto crimes'){ // We use the key/display name to refer to the layer
+		map.removeControl(legend); // legend is the variable name of the layer legend
+		}
+		});
+
+		// Adding the legend when the layer is added
+		map.on('overlayadd', function(eventLayer){
+		if (eventLayer.name == 'chicago auto crimes'){
+		legend.addTo(map);
+		}
+		});
+
+	
+		
+	
+        </script>
+   </body>
+</html>
